@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+      - "4840:4840"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - OPCUA_HOST=0.0.0.0
+      - OPCUA_PORT=4840
+    volumes:
+      - ./model:/app/backend/model
+
+  influxdb:
+    image: influxdb:2.7
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword123
+      - DOCKER_INFLUXDB_INIT_ORG=pcb_factory
+      - DOCKER_INFLUXDB_INIT_BUCKET=defect_metrics
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+
+  telegraf:
+    image: telegraf:1.28
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    environment:
+      - INFLUX_TOKEN=my-super-secret-auth-token
+      - OPCUA_USER=${OPCUA_USER:-admin}
+      - OPCUA_PASSWORD=${OPCUA_PASSWORD:-adminpassword123}
+    depends_on:
+      - influxdb
+      - backend
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - influxdb
+
+volumes:
+  influxdb-data:
+  grafana-data:
