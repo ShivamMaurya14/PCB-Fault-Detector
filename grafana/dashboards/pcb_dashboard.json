@@ -1,0 +1,25 @@
+{
+  "title": "PCB Defect Monitoring",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Defective PCBs",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"defect_metrics\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"pcb_defect_metrics\" and r[\"_field\"] == \"Total_Defective_PCBs\") |> last()"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total PCBs Processed",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"defect_metrics\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"pcb_defect_metrics\" and r[\"_field\"] == \"Total_PCBs_Processed\") |> last()"
+        }
+      ]
+    }
+  ]
+}
