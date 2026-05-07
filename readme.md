@@ -1,7 +1,7 @@
 # Real-Time PCB Faults Detection (Edge & Industry 4.0)
 
 <div align="center">
-  <img src="https://img.shields.io/badge/YOLO-v8-blue.svg" alt="YOLOv8">
+  <img src="https://img.shields.io/badge/YOLO-v11-blue.svg" alt="YOLOv11">
   <img src="https://img.shields.io/badge/Hardware-NVIDIA%20Jetson%20Orin-76B900.svg" alt="Jetson">
   <img src="https://img.shields.io/badge/API-FastAPI-009688.svg" alt="FastAPI">
   <img src="https://img.shields.io/badge/Protocol-OPC--UA-orange.svg" alt="OPC-UA">
@@ -11,7 +11,7 @@
 ## 📌 Overview
 This project implements an automated, high-performance object detection pipeline designed for **Industry 4.0 factory floors**. It identifies and localizes manufacturing defects on Printed Circuit Boards (PCBs) in real-time. 
 
-Built specifically for **Edge Deployment**, it leverages the **YOLOv8 + MobileNetV3** architecture running on **NVIDIA Jetson Orin NX** via **TensorRT**, achieving 60+ FPS inference. The system integrates a fully secured REST API, an industrial OPC-UA server, and an automated Grafana telemetry stack to prove on-device inference claims with real hardware numbers.
+Built specifically for **Edge Deployment**, it leverages the **YOLOv11s** architecture running on **NVIDIA Jetson Orin NX** via **TensorRT**, achieving 60+ FPS inference. The system integrates a fully secured REST API, an industrial OPC-UA server, and an automated Grafana telemetry stack to prove on-device inference claims with real hardware numbers.
 
 ## 🏭 Defect Classes
 Trained on the **PKU-Market-PCB** dataset, the system detects 6 common defects:
@@ -35,7 +35,7 @@ Trained on the **PKU-Market-PCB** dataset, the system detects 6 common defects:
 ├── backend/
 │   ├── api.py              # Secured FastAPI REST application
 │   ├── camera_client.py    # Edge script to capture & stream CSI/USB video
-│   ├── detector.py         # YOLOv8 TensorRT Inference wrapper
+│   ├── detector.py         # YOLOv11 TensorRT Inference wrapper
 │   ├── opcua_server.py     # Authenticated async OPC-UA server
 │   ├── main.py             # Asyncio orchestrator for API & OPC-UA
 │   └── tests/              # Pytest automated test suite
