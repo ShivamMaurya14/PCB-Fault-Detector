@@ -12,20 +12,20 @@ RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/backend
+WORKDIR /app
 
 # Copy requirements and install them
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt ./backend/
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # Copy the rest of the application structure
-# Assuming build context is project root
-COPY backend/ ./
-COPY model/ ../model/
+COPY backend/ ./backend/
+COPY model/ ./model/
 
 # Expose FastAPI and OPC-UA ports
 EXPOSE 8000
 EXPOSE 4840
 
 # Run the orchestrator
-CMD ["python", "main.py"]
+ENV PYTHONPATH=/app
+CMD ["python", "-m", "backend.main"]
