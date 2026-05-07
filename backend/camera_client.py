@@ -22,6 +22,10 @@ try:
 except ValueError:
     pass 
 
+# Camera Client Configuration
+MAX_FPS = int(os.getenv("MAX_FPS", "10"))
+frame_delay = 1.0 / MAX_FPS if MAX_FPS > 0 else 0
+
 def main():
     print(f"Connecting to camera: {CAMERA_SOURCE}")
     cap = cv2.VideoCapture(CAMERA_SOURCE)
@@ -30,10 +34,14 @@ def main():
         print("Error: Could not open camera.")
         return
 
-    print(f"Streaming to API: {API_URL}")
+    print(f"Streaming to API: {API_URL} (Target: {MAX_FPS} FPS)")
     print("Press 'q' to quit.")
 
+    consecutive_errors = 0
+
     while True:
+        loop_start = time.time()
+        
         ret, frame = cap.read()
         if not ret:
             print("Failed to grab frame.")
@@ -53,11 +61,12 @@ def main():
         }
         
         try:
-            start_time = time.time()
-            response = requests.post(API_URL, files=files, headers=headers, timeout=2.0)
-            latency = (time.time() - start_time) * 1000
+            req_start = time.time()
+            response = requests.post(API_URL, files=files, headers=headers, timeout=5.0)
+            latency = (time.time() - req_start) * 1000
             
             if response.status_code == 200:
+                consecutive_errors = 0 # reset on success
                 result = response.json()
                 is_defective = result.get('is_defective', False)
                 inference_time = result.get('inference_time_ms', 0)
@@ -77,16 +86,28 @@ def main():
                 print(f"[{status_text}] Net Latency: {latency:.1f}ms | Inference: {inference_time:.1f}ms")
             else:
                 print(f"API Error: {response.status_code} - {response.text}")
+                consecutive_errors += 1
                 
         except requests.exceptions.RequestException as e:
             print(f"Connection failed: {e}")
-            time.sleep(1) # wait before retrying
+            consecutive_errors += 1
+            
+        # If API is down or failing, back off exponentially up to 5 seconds
+        if consecutive_errors > 0:
+            backoff = min(5.0, 0.5 * (2 ** (consecutive_errors - 1)))
+            print(f"Backing off for {backoff:.1f}s...")
+            time.sleep(backoff)
 
         # Show the live feed locally
         cv2.imshow('Edge Camera Feed', frame)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+            
+        # FPS Limiter
+        elapsed = time.time() - loop_start
+        if elapsed < frame_delay:
+            time.sleep(frame_delay - elapsed)
 
     cap.release()
     cv2.destroyAllWindows()
