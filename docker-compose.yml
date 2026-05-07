@@ -14,7 +14,7 @@ services:
       - OPCUA_HOST=0.0.0.0
       - OPCUA_PORT=4840
     volumes:
-      - ./model:/app/backend/model
+      - ./model:/app/model
 
   influxdb:
     image: influxdb:2.7
@@ -22,11 +22,11 @@ services:
       - "8086:8086"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword123
-      - DOCKER_INFLUXDB_INIT_ORG=pcb_factory
-      - DOCKER_INFLUXDB_INIT_BUCKET=defect_metrics
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USER:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-adminpassword123}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-pcb_factory}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-defect_metrics}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN:-my-super-secret-auth-token}
     volumes:
       - influxdb-data:/var/lib/influxdb2
 
@@ -35,7 +35,7 @@ services:
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     environment:
-      - INFLUX_TOKEN=my-super-secret-auth-token
+      - INFLUX_TOKEN=${INFLUX_TOKEN:-my-super-secret-auth-token}
       - OPCUA_USER=${OPCUA_USER:-admin}
       - OPCUA_PASSWORD=${OPCUA_PASSWORD:-adminpassword123}
     depends_on:
