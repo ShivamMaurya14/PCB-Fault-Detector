@@ -13,8 +13,28 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 from backend.detector import PCBDetector
+from backend.opcua_server import PCBOPCUAServer
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="PCB Defect Detection API", description="Edge API for real-time PCB inspection")
+opcua_server_instance = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global opcua_server_instance
+    print("Starting OPC-UA Server ...")
+    opcua_server_instance = PCBOPCUAServer()
+    await opcua_server_instance.setup()
+    await opcua_server_instance.server.start()
+    print(f"OPC-UA Server is running at {opcua_server_instance.endpoint}")
+    yield
+    print("Stopping OPC-UA Server...")
+    await opcua_server_instance.server.stop()
+
+app = FastAPI(
+    title="PCB Defect Detection API", 
+    description="Edge API for real-time PCB inspection",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,8 +45,6 @@ app.add_middleware(
 )
 
 detector = PCBDetector()
-
-opcua_server = None
 
 API_KEY = os.getenv("API_KEY", "my-secure-api-key")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -88,8 +106,8 @@ async def detect_pcb(file: UploadFile = File(...), api_key: str = Depends(get_ap
             cv2.imwrite(filepath, img)
 
     # Update OPC-UA metrics asynchronously but blockingly within the same loop to ensure thread safety
-    if opcua_server is not None:
-        await opcua_server.update_metrics(is_defective, detections)
+    if opcua_server_instance is not None:
+        await opcua_server_instance.update_metrics(is_defective, detections)
     
     return DetectionResponse(
         is_defective=is_defective,

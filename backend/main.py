@@ -11,17 +11,7 @@ async def main():
     api_host = os.getenv("API_HOST", "0.0.0.0")
     api_port = int(os.getenv("API_PORT", "8000"))
     
-    # 1. Initialize and start OPC-UA Server
-    print("Starting OPC-UA Server ...")
-    opc_server = PCBOPCUAServer()
-    await opc_server.setup()
-    await opc_server.server.start()
-    print(f"OPC-UA Server is running at {opc_server.endpoint}")
-    
-    # 2. Inject OPC-UA server into FastAPI app
-    api.opcua_server = opc_server
-    
-    # 3. Configure and start FastAPI Server using Uvicorn
+    # Configure and start FastAPI Server using Uvicorn
     print(f"Starting FastAPI Server on http://{api_host}:{api_port} ...")
     config = uvicorn.Config(app=api.app, host=api_host, port=api_port, log_level="info")
     server = uvicorn.Server(config)
