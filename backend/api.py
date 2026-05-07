@@ -5,15 +5,25 @@ import time
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Security, Depends
 from fastapi.security.api_key import APIKeyHeader
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 from backend.detector import PCBDetector
 
 app = FastAPI(title="PCB Defect Detection API", description="Edge API for real-time PCB inspection")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 detector = PCBDetector()
 
 opcua_server = None
@@ -31,14 +41,14 @@ DEFECTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "captured
 os.makedirs(DEFECTS_DIR, exist_ok=True)
 
 class DefectResult(BaseModel):
-    class_name: str
-    confidence: float
-    bbox: List[float]
+    class_name: str = Field(..., description="Type of the defect detected (e.g., Missing_hole)")
+    confidence: float = Field(..., description="Confidence score of the detection [0.0, 1.0]")
+    bbox: List[float] = Field(..., description="Bounding box coordinates [x1, y1, x2, y2]")
 
 class DetectionResponse(BaseModel):
-    is_defective: bool
-    defects: List[DefectResult]
-    inference_time_ms: float
+    is_defective: bool = Field(..., description="True if any defect was detected on the PCB")
+    defects: List[DefectResult] = Field(..., description="List of detected defects")
+    inference_time_ms: float = Field(..., description="Time taken for inference in milliseconds")
 
 @app.get("/health")
 async def health_check():
