@@ -46,7 +46,8 @@ class PCBDetector:
 
         if not self.use_mock and self.model is not None:
             # Real inference
-            results = self.model(img, conf=0.25)[0]
+            conf_threshold = float(os.getenv("CONFIDENCE_THRESHOLD", "0.25"))
+            results = self.model(img, conf=conf_threshold)[0]
             detections = []
             for box in results.boxes:
                 cls_id = int(box.cls[0].item())
